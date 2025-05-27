@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- GitHub Authentication Selection Wizard Form View -->
+    <record id="view_github_auth_selection_wizard_form" model="ir.ui.view">
+        <field name="name">github.auth.selection.wizard.form</field>
+        <field name="model">github.auth.selection.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select GitHub Authentication">
+                <div class="alert alert-info" role="alert">
+                    Multiple GitHub authentication methods are available for your user.
+                    Please select which one you want to use to fetch repositories.
+                </div>
+                <sheet>
+                    <group>
+                        <field name="available_auth_ids" invisible="1"/>
+                        <field name="auth_id" options="{'no_create': True, 'no_open': True}"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- GitHub Repository Fetch Wizard Action -->
+    <record id="action_github_repository_fetch_wizard" model="ir.actions.act_window">
+        <field name="name">Fetch GitHub Repositories</field>
+        <field name="res_model">github.auth.selection.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p>
+                Select an authentication method to fetch repositories from GitHub.
+            </p>
+        </field>
+    </record>
+</odoo>

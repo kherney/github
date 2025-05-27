@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- GitHub Authentication Form View -->
+    <record id="view_github_auth_form" model="ir.ui.view">
+        <field name="name">github.auth.form</field>
+        <field name="model">github.auth</field>
+        <field name="arch" type="xml">
+            <form string="GitHub Authentication">
+                <header>
+                    <button name="validate_token" string="Validate Token" type="object" 
+                            class="oe_highlight" invisible="state == 'valid'"/>
+                    <button name="generate_jwt_token" string="Generate JWT Token" type="object" 
+                            class="oe_highlight" invisible="auth_type != 'github_app'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="valid,expired,invalid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. My GitHub Token"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="auth_type" widget="radio"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="last_validation" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Token Settings" invisible="auth_type == 'github_app'">
+                            <group>
+                                <field name="token" password="True" required="auth_type in ['personal', 'fine_grained']"/>
+                                <field name="token_expiration"/>
+                            </group>
+                        </page>
+                        <page string="GitHub App Settings" invisible="auth_type != 'github_app'">
+                            <group>
+                                <field name="app_id" required="auth_type == 'github_app'"/>
+                                <field name="app_name"/>
+                                <field name="installation_id" required="auth_type == 'github_app'"/>
+                                <field name="private_key" password="True" required="auth_type == 'github_app'"/>
+                                <field name="jwt_token" readonly="1"/>
+                                <field name="jwt_expiration" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Authorized Users" invisible="auth_type != 'github_app'">
+                            <field name="user_ids" widget="many2many_tags"/>
+                            <p class="text-muted">
+                                Only these users will be able to use this GitHub App authentication.
+                                If no users are specified, no one will be able to use this authentication.
+                            </p>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- GitHub Authentication Tree View -->
+    <record id="view_github_auth_tree" model="ir.ui.view">
+        <field name="name">github.auth.tree</field>
+        <field name="model">github.auth</field>
+        <field name="arch" type="xml">
+            <tree string="GitHub Authentication" decoration-danger="state=='invalid'" decoration-warning="state=='expired'" decoration-success="state=='valid'">
+                <field name="name"/>
+                <field name="auth_type"/>
+                <field name="state"/>
+                <field name="last_validation"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- GitHub Authentication Search View -->
+    <record id="view_github_auth_search" model="ir.ui.view">
+        <field name="name">github.auth.search</field>
+        <field name="model">github.auth</field>
+        <field name="arch" type="xml">
+            <search string="GitHub Authentication">
+                <field name="name"/>
+                <field name="auth_type"/>
+                <field name="state"/>
+                <separator/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Valid" name="valid" domain="[('state', '=', 'valid')]"/>
+                <filter string="Expired" name="expired" domain="[('state', '=', 'expired')]"/>
+                <filter string="Invalid" name="invalid" domain="[('state', '=', 'invalid')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Authentication Type" name="group_by_auth_type" context="{'group_by': 'auth_type'}"/>
+                    <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- GitHub Authentication Action -->
+    <record id="action_github_auth" model="ir.actions.act_window">
+        <field name="name">GitHub Authentication</field>
+        <field name="res_model">github.auth</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_github_auth_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first GitHub authentication
+            </p>
+            <p>
+                Configure your GitHub authentication methods to connect to GitHub API.
+            </p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Menu -->
+    <menuitem id="menu_github_root"
+              name="GitHub"
+              web_icon="github,static/description/icon.png"
+              sequence="100"/>
+    
+    <!-- Repositories Menu -->
+    <menuitem id="menu_github_repositories"
+              name="Repositories"
+              parent="menu_github_root"
+              action="action_github_repository"
+              sequence="10"/>
+    
+    <!-- Configuration Menu -->
+    <menuitem id="menu_github_configuration"
+              name="Configuration"
+              parent="menu_github_root"
+              sequence="100"/>
+    
+    <!-- Authentication Menu -->
+    <menuitem id="menu_github_auth"
+              name="Authentication"
+              parent="menu_github_configuration"
+              action="action_github_auth"
+              sequence="10"/>
+</odoo>

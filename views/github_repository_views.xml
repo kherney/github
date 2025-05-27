@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- GitHub Repository Form View -->
+    <record id="view_github_repository_form" model="ir.ui.view">
+        <field name="name">github.repository.form</field>
+        <field name="model">github.repository</field>
+        <field name="arch" type="xml">
+            <form string="GitHub Repository">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="Repository Name"/></h1>
+                        <h2><field name="full_name" readonly="1"/></h2>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="auth_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="user_id" groups="base.group_system"/>
+                            <field name="private" readonly="1"/>
+                            <field name="default_branch" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="github_id" readonly="1"/>
+                            <field name="created_at" readonly="1"/>
+                            <field name="updated_at" readonly="1"/>
+                            <field name="pushed_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" placeholder="Repository description..."/>
+                        </page>
+                        <page string="URLs">
+                            <group>
+                                <field name="html_url" widget="url" readonly="1"/>
+                                <field name="clone_url" readonly="1"/>
+                                <field name="ssh_url" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Owner">
+                            <group>
+                                <field name="owner_login" readonly="1"/>
+                                <field name="owner_html_url" widget="url" readonly="1"/>
+                                <field name="owner_avatar_url" widget="image" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Statistics">
+                            <group>
+                                <field name="stargazers_count" readonly="1"/>
+                                <field name="forks_count" readonly="1"/>
+                                <field name="open_issues_count" readonly="1"/>
+                                <field name="watchers_count" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Raw Data" groups="base.group_system">
+                            <field name="raw_data" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- GitHub Repository Tree View -->
+    <record id="view_github_repository_tree" model="ir.ui.view">
+        <field name="name">github.repository.tree</field>
+        <field name="model">github.repository</field>
+        <field name="arch" type="xml">
+            <tree string="GitHub Repositories" decoration-danger="private==True">
+                <field name="name"/>
+                <field name="full_name"/>
+                <field name="owner_login"/>
+                <field name="private"/>
+                <field name="stargazers_count"/>
+                <field name="forks_count"/>
+                <field name="open_issues_count"/>
+                <field name="updated_at"/>
+                <field name="auth_id"/>
+                <field name="user_id" groups="base.group_system"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- GitHub Repository Search View -->
+    <record id="view_github_repository_search" model="ir.ui.view">
+        <field name="name">github.repository.search</field>
+        <field name="model">github.repository</field>
+        <field name="arch" type="xml">
+            <search string="GitHub Repositories">
+                <field name="name"/>
+                <field name="full_name"/>
+                <field name="owner_login"/>
+                <field name="description"/>
+                <separator/>
+                <filter string="Private" name="private" domain="[('private', '=', True)]"/>
+                <filter string="Public" name="public" domain="[('private', '=', False)]"/>
+                <separator/>
+                <filter string="My Repositories" name="my_repositories" domain="[('user_id', '=', uid)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Owner" name="group_by_owner" context="{'group_by': 'owner_login'}"/>
+                    <filter string="Authentication" name="group_by_auth" context="{'group_by': 'auth_id'}"/>
+                    <filter string="User" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- GitHub Repository Action -->
+    <record id="action_github_repository" model="ir.actions.act_window">
+        <field name="name">GitHub Repositories</field>
+        <field name="res_model">github.repository</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_github_repository_search"/>
+        <field name="context">{'search_default_my_repositories': 1, 'not_raise': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No repositories found
+            </p>
+            <p>
+                Use the "Fetch Repositories" menu to fetch your GitHub repositories.
+            </p>
+        </field>
+    </record>
+
+</odoo>

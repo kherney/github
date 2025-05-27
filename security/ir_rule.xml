@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Rule for GitHub repositories: users can only see their own repositories -->
+        <record id="rule_github_repository_user" model="ir.rule">
+            <field name="name">GitHub Repository: User can only see their own repositories</field>
+            <field name="model_id" ref="model_github_repository"/>
+            <field name="domain_force">[('user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Rule for GitHub repositories: system users can see all repositories -->
+        <record id="rule_github_repository_system" model="ir.rule">
+            <field name="name">GitHub Repository: System users can see all repositories</field>
+            <field name="model_id" ref="model_github_repository"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Rule for GitHub authentication: users can only see authentication methods they are authorized to use -->
+        <record id="rule_github_auth_user" model="ir.rule">
+            <field name="name">GitHub Authentication: User can only see authentication methods they are authorized to use</field>
+            <field name="model_id" ref="model_github_auth"/>
+            <field name="domain_force">['|', ('auth_type', 'in', ['personal', 'fine_grained']), ('user_ids', 'in', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Rule for GitHub authentication: system users can see all authentication methods -->
+        <record id="rule_github_auth_system" model="ir.rule">
+            <field name="name">GitHub Authentication: System users can see all authentication methods</field>
+            <field name="model_id" ref="model_github_auth"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+    </data>
+</odoo>
