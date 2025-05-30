@@ -60,7 +60,7 @@ class GitHubRepository(models.Model):
     
     # Authentication
     auth_id = fields.Many2one('github.auth', string='Authentication', 
-                             required=True, ondelete='restrict')
+                             required=False)
     
     # User who owns this record
     user_id = fields.Many2one('res.users', string='User', 
@@ -73,10 +73,38 @@ class GitHubRepository(models.Model):
          'Repository must be unique per authentication method!')
     ]
 
+    def serialize(self, repo_data):
+
+        # Prepare values for create/update
+        repo = {
+            'name': repo_data.get('name'),
+            'full_name': repo_data.get('full_name'),
+            'description': repo_data.get('description'),
+            'private': repo_data.get('private', False),
+            'html_url': repo_data.get('html_url'),
+            'clone_url': repo_data.get('clone_url'),
+            'ssh_url': repo_data.get('ssh_url'),
+            'default_branch': repo_data.get('default_branch'),
+            'owner_login': repo_data.get('owner', {}).get('login'),
+            'owner_avatar_url': repo_data.get('owner', {}).get('avatar_url'),
+            'owner_html_url': repo_data.get('owner', {}).get('html_url'),
+            'stargazers_count': repo_data.get('stargazers_count', 0),
+            'forks_count': repo_data.get('forks_count', 0),
+            'open_issues_count': repo_data.get('open_issues_count', 0),
+            'watchers_count': repo_data.get('watchers_count', 0),
+            'created_at': repo_data.get('created_at'),
+            'updated_at': repo_data.get('updated_at'),
+            'pushed_at': repo_data.get('pushed_at'),
+            'github_id': repo_data.get('id'),
+            'raw_data': json.dumps(repo_data),
+            'user_id': self.env.user.id,
+        }
+
+        return repo
+
     
     def set_auth_headers(self):
         """ override Set authentication headers for GitHub API requests."""
-        self.ensure_one()
         Auth = self.env['github.auth']
         
         # Get the authentication record
@@ -130,93 +158,66 @@ class GitHubRepository(models.Model):
     def _process_repositories_data(self, cr, repos_data, auth):
         """Process repository data from GitHub API and update the database."""
         user_id = self.env.user.id
-        
-        for repo_data in repos_data:
-            # Check if repository already exists
+
+        repos = { r.get('id'): r for r in repos_data}
+        github_ids = tuple(repos.keys())  # Explict tuple conversion for SQL query
+
+        # Check if repositories already exists
+        cr.execute("SELECT id FROM github_repository WHERE github_id IN %s", github_ids)
+        to_update = cr.fetchall()
+
+        # Check repositories to create
+        cr.execute("SELECT id FROM github_repository WHERE github_id NOT IN %s", github_ids)
+        to_create = cr.fetchall()
+
+        for id_update in to_update:
+            repo_data = repos[id_update]
+
+            vals = self.serialize(repo_data)
+
+            # Update existing repository
             cr.execute("""
-                SELECT id FROM github_repository 
-                WHERE github_id = %s AND auth_id = %s
-            """, (repo_data.get('id'), auth.id))
-            
-            existing_id = cr.fetchone()
-            
-            # Prepare values for create/update
-            vals = {
-                'name': repo_data.get('name'),
-                'full_name': repo_data.get('full_name'),
-                'description': repo_data.get('description'),
-                'private': repo_data.get('private', False),
-                'html_url': repo_data.get('html_url'),
-                'clone_url': repo_data.get('clone_url'),
-                'ssh_url': repo_data.get('ssh_url'),
-                'default_branch': repo_data.get('default_branch'),
-                'owner_login': repo_data.get('owner', {}).get('login'),
-                'owner_avatar_url': repo_data.get('owner', {}).get('avatar_url'),
-                'owner_html_url': repo_data.get('owner', {}).get('html_url'),
-                'stargazers_count': repo_data.get('stargazers_count', 0),
-                'forks_count': repo_data.get('forks_count', 0),
-                'open_issues_count': repo_data.get('open_issues_count', 0),
-                'watchers_count': repo_data.get('watchers_count', 0),
-                'created_at': repo_data.get('created_at'),
-                'updated_at': repo_data.get('updated_at'),
-                'pushed_at': repo_data.get('pushed_at'),
-                'github_id': repo_data.get('id'),
-                'raw_data': json.dumps(repo_data),
-                'auth_id': auth.id,
-                'user_id': user_id,
-            }
-            
-            if existing_id:
-                # Update existing repository
-                cr.execute("""
-                    UPDATE github_repository SET
-                        name = %s,
-                        full_name = %s,
-                        description = %s,
-                        private = %s,
-                        html_url = %s,
-                        clone_url = %s,
-                        ssh_url = %s,
-                        default_branch = %s,
-                        owner_login = %s,
-                        owner_avatar_url = %s,
-                        owner_html_url = %s,
-                        stargazers_count = %s,
-                        forks_count = %s,
-                        open_issues_count = %s,
-                        watchers_count = %s,
-                        created_at = %s,
-                        updated_at = %s,
-                        pushed_at = %s,
-                        raw_data = %s
-                    WHERE id = %s
-                """, (
-                    vals['name'], vals['full_name'], vals['description'], vals['private'],
-                    vals['html_url'], vals['clone_url'], vals['ssh_url'], vals['default_branch'],
-                    vals['owner_login'], vals['owner_avatar_url'], vals['owner_html_url'],
-                    vals['stargazers_count'], vals['forks_count'], vals['open_issues_count'],
-                    vals['watchers_count'], vals['created_at'], vals['updated_at'], vals['pushed_at'],
-                    vals['raw_data'], existing_id[0]
-                ))
-            else:
-                # Create new repository
-                cr.execute("""
-                    INSERT INTO github_repository (
-                        name, full_name, description, private, html_url, clone_url, ssh_url,
-                        default_branch, owner_login, owner_avatar_url, owner_html_url,
-                        stargazers_count, forks_count, open_issues_count, watchers_count,
-                        created_at, updated_at, pushed_at, github_id, raw_data, auth_id, user_id,
-                        create_uid, create_date, write_uid, write_date
-                    ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                        %s, NOW(), %s, NOW()
-                    )
-                """, (
-                    vals['name'], vals['full_name'], vals['description'], vals['private'],
-                    vals['html_url'], vals['clone_url'], vals['ssh_url'], vals['default_branch'],
-                    vals['owner_login'], vals['owner_avatar_url'], vals['owner_html_url'],
-                    vals['stargazers_count'], vals['forks_count'], vals['open_issues_count'],
-                    vals['watchers_count'], vals['created_at'], vals['updated_at'], vals['pushed_at'],
-                    vals['github_id'], vals['raw_data'], vals['auth_id'], vals['user_id'],
-                    user_id, user_id
-                ))
+                UPDATE github_repository SET
+                    name = %s,
+                    full_name = %s,
+                    description = %s,
+                    private = %s,
+                    html_url = %s,
+                    clone_url = %s,
+                    ssh_url = %s,
+                    default_branch = %s,
+                    owner_login = %s,
+                    owner_avatar_url = %s,
+                    owner_html_url = %s,
+                    stargazers_count = %s,
+                    forks_count = %s,
+                    open_issues_count = %s,
+                    watchers_count = %s,
+                    created_at = %s,
+                    updated_at = %s,
+                    pushed_at = %s,
+                    raw_data = %s
+                WHERE id = %s
+            """, (
+                vals['name'], vals['full_name'], vals['description'], vals['private'],
+                vals['html_url'], vals['clone_url'], vals['ssh_url'], vals['default_branch'],
+                vals['owner_login'], vals['owner_avatar_url'], vals['owner_html_url'],
+                vals['stargazers_count'], vals['forks_count'], vals['open_issues_count'],
+                vals['watchers_count'], vals['created_at'], vals['updated_at'], vals['pushed_at'],
+                vals['raw_data'], id_update
+            ))
+
+        # Create new repositories
+
+        params = ("(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, NOW())",)
+
+        query = """
+                INSERT INTO github_repository (
+                name, full_name, description, private, html_url, clone_url, ssh_url,
+                default_branch, owner_login, owner_avatar_url, owner_html_url,
+                stargazers_count, forks_count, open_issues_count, watchers_count,
+                created_at, updated_at, pushed_at, github_id, raw_data, user_id,
+                create_uid, create_date, write_uid, write_date
+            ) VALUES %s""" % (','.join(params * len(to_create)))
+
+        cr.execute(query, [tuple(self.serialize(repos[id_create]).values()) for id_create in to_create])

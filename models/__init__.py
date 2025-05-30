@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-HOST_GITHUB = 'https://api.github.co'
+HOST_GITHUB = 'api.github.com'
 
 from . import github_auth
 from . import github_repository

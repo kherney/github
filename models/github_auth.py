@@ -176,10 +176,8 @@ class GitHubAuth(models.Model):
         if not user:
             user = self.env.user
         
-        domain = [('active', '=', True), ('user_id', '=', user.id)]
+        domain = [('active', '=', True), '|', ('auth_type', '=', 'github_app'),('user_id', '=', user.id)]
         auths = self.search(domain)
-
-        auths += self.search([domain[0]])
         
         # Filter auths based on user authorization
         return auths.filtered(lambda a: a.is_user_authorized(user))
