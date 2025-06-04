@@ -163,14 +163,13 @@ class GitHubRepository(models.Model):
         github_ids = tuple(repos.keys())  # Explict tuple conversion for SQL query
 
         # Check if repositories already exists
-        cr.execute("SELECT id FROM github_repository WHERE github_id IN %s", github_ids)
+        cr.execute("SELECT id, github_id FROM github_repository WHERE github_id IN %s", (github_ids,))
         to_update = cr.fetchall()
 
-        # Check repositories to create
-        cr.execute("SELECT id FROM github_repository WHERE github_id NOT IN %s", github_ids)
-        to_create = cr.fetchall()
+        updated = []
 
-        for id_update in to_update:
+        for id_update, _ in to_update:
+            updated.append(_)
             repo_data = repos[id_update]
 
             vals = self.serialize(repo_data)
@@ -208,6 +207,7 @@ class GitHubRepository(models.Model):
             ))
 
         # Create new repositories
+        to_create = (_id for _id in github_ids if _id not in updated)
 
         params = ("(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, NOW())",)
 
