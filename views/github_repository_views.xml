@@ -14,7 +14,6 @@
                     </div>
                     <group>
                         <group>
-                            <field name="auth_id" options="{'no_create': True, 'no_open': True}"/>
                             <field name="user_id" groups="base.group_system"/>
                             <field name="private" readonly="1"/>
                             <field name="default_branch" readonly="1"/>
@@ -75,7 +74,6 @@
                 <field name="forks_count"/>
                 <field name="open_issues_count"/>
                 <field name="updated_at"/>
-                <field name="auth_id"/>
                 <field name="user_id" groups="base.group_system"/>
             </tree>
         </field>
@@ -98,7 +96,6 @@
                 <filter string="My Repositories" name="my_repositories" domain="[('user_id', '=', uid)]"/>
                 <group expand="0" string="Group By">
                     <filter string="Owner" name="group_by_owner" context="{'group_by': 'owner_login'}"/>
-                    <filter string="Authentication" name="group_by_auth" context="{'group_by': 'auth_id'}"/>
                     <filter string="User" name="group_by_user" context="{'group_by': 'user_id'}"/>
                 </group>
             </search>

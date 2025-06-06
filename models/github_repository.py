@@ -170,7 +170,7 @@ class GitHubRepository(models.Model):
 
         for id_update, _ in to_update:
             updated.append(_)
-            repo_data = repos[id_update]
+            repo_data = repos[_]
 
             vals = self.serialize(repo_data)
 
@@ -207,17 +207,22 @@ class GitHubRepository(models.Model):
             ))
 
         # Create new repositories
-        to_create = (_id for _id in github_ids if _id not in updated)
+        to_create = [_id for _id in github_ids if _id not in updated]
 
-        params = ("(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, NOW())",)
+        if not to_create:
+            return
 
-        query = """
-                INSERT INTO github_repository (
+        values = ','.join(['%s'] * len(to_create))
+
+        params = tuple(tuple(self.serialize(repos[id_create]).values()) for id_create in to_create)
+
+        query = """INSERT INTO github_repository (
                 name, full_name, description, private, html_url, clone_url, ssh_url,
                 default_branch, owner_login, owner_avatar_url, owner_html_url,
                 stargazers_count, forks_count, open_issues_count, watchers_count,
-                created_at, updated_at, pushed_at, github_id, raw_data, user_id,
-                create_uid, create_date, write_uid, write_date
-            ) VALUES %s""" % (','.join(params * len(to_create)))
+                created_at, updated_at, pushed_at, github_id, raw_data, user_id
+            ) VALUES %s"""
 
-        cr.execute(query, [tuple(self.serialize(repos[id_create]).values()) for id_create in to_create])
+        final_query = self.env.cr.mogrify(query % values, params).decode('utf-8')
+
+        cr.execute(final_query)
