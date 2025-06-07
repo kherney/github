@@ -3,7 +3,7 @@
     'name': "GitHub Integration",
     'sequence': 370,
 
-    'summary': "GitHub API integration for Odoo",
+    'summary': "GitHub API integration for Odoo with automatic data synchronization",
 
     'description': """
     This module provides GitHub API integration for Odoo:

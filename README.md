@@ -1,6 +1,6 @@
 # GitHub Integration for Odoo
 
-This module provides GitHub API integration for Odoo, allowing users to connect to GitHub API using different authentication methods and manage GitHub repositories.
+This module provides GitHub API integration for Odoo, allowing users to connect to GitHub API using different authentication methods and manage GitHub repositories. It leverages the HTTP Client module for seamless API communication and automatic data synchronization.
 
 ## Features
 
@@ -12,13 +12,16 @@ This module provides GitHub API integration for Odoo, allowing users to connect 
 - Token expiration management according to the authentication methods
 - User-based access control
 - Authentication method selection wizard
+- Automatic data synchronization with GitHub API
 
 ## Technical Features
 
 - Built on top of the HTTP Client module
-- Repository listing and management
+- Automatic data synchronization through the https.pool.web abstract model
+- Repository listing and management without manual API requests
 - User-based access control
 - Authentication method selection wizard
+- Efficient data fetching with database savepoints for transactional safety
 
 ## Models
 
@@ -80,6 +83,11 @@ This wizard allows users to select which authentication method to use when they 
 3. Install this module
 4. Configure authentication methods
 5. Fetch repositories
+
+## Additional Resources
+
+- [Medium Post: HTTP Client Module (Spanish)](https://medium.com/@kherney/cliente-http-para-odoo-el-compa%C3%B1ero-ideal-para-tus-apis-1280d35c005f): A technical article explaining how the HTTP Client module and the https.pool.web abstract model enable automatic data synchronization with external APIs, using this module as a case study.
+- [Medium Post: GitHub Integration (Spanish)](https://medium.com/@kherney/github-modulo-odoo-usando-api-6db91d8630f7): A technical article focusing on the GitHub module's philosophy, architecture, and main features, highlighting its modular design and integration capabilities.
 
 ## License
 
